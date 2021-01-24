@@ -12,7 +12,6 @@ using namespace std;
 
 int main() {
     double a, b, c, sqrtTerm;
-    string status;
 
     cout << "Please enter value of a: ";
     cin >> a;
