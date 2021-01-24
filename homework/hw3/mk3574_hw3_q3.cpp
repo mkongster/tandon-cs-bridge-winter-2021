@@ -12,7 +12,6 @@ using namespace std;
 
 int main() {
     double a, b, c, sqrtTerm;
-    double solutionPlus, solutionMinus;
     string status;
 
     cout << "Please enter value of a: ";
@@ -34,8 +33,8 @@ int main() {
             double solution = -b / (2 * a);
             cout << "This equation has a single real solution x=" << solution << endl;
         } else {
-            solutionPlus = (-b + sqrt(sqrtTerm)) / (2 * a);
-            solutionMinus = (-b - sqrt(sqrtTerm)) / (2 * a);
+            double solutionPlus = (-b + sqrt(sqrtTerm)) / (2 * a);
+            double solutionMinus = (-b - sqrt(sqrtTerm)) / (2 * a);
             cout << "This equation has two real solutions x=" << solutionPlus << ", x=" << solutionMinus << endl;
         }
     }
