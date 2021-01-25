@@ -2,7 +2,7 @@
 Ming Kong
 Tandon Bridge Winter 2021
 Homework 3
-Question 5
+Question 6
 */
 
 #include <iostream>
