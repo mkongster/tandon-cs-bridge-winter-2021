@@ -3,8 +3,6 @@ Ming Kong
 Tandon Bridge Winter 2021
 Homework 4
 Question 1
-
-Prints the first n even numbers.
 */
 
 #include <iostream>
