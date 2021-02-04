@@ -11,10 +11,8 @@ using namespace std;
 
 int main() {
     int input, digit, modDigit, num;
-    int tens = 1;
     int oddCounter = 0;
     int evenCounter = 0;
-    int counter;
     cout << "Please input a positive integer: ";
     cin >> input;
 
