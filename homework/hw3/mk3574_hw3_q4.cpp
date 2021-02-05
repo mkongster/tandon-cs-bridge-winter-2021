@@ -26,23 +26,40 @@ int main() {
 
     switch (choice) {
         case 1: {
-            rounded = int(real);
+            if (real > 0) {
+                rounded = int(real);
+            } else {
+                rounded = int(real) - 1;
+            }
             break;
         }
         case 2: {
-            if ((int)real == real) {
-                rounded = real;
+            if (real > 0) {
+                if ((int)real == real) {
+                    rounded = real;
+                } else {
+                    rounded = int(real) + 1; 
+                }
             } else {
-                rounded = int(real) + 1; 
+                rounded = real;
             }
             break;
         }
         case 3: {
-            decimal = real - int(real);
-            if (decimal >= 0.5) {
-                rounded = int(real) + 1;
+            if (real > 0) {
+                decimal = real - int(real);
+                if (decimal >= 0.5) {
+                    rounded = int(real) + 1;
+                } else {
+                    rounded = int(real);
+                }
             } else {
-                rounded = int(real);
+                decimal = -(real - int(real));
+                if (decimal >= 0.5) {
+                    rounded = int(real) - 1;
+                } else {
+                    rounded = int(real);
+                }
             }
             break;
         }
