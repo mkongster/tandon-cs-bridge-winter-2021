@@ -16,8 +16,13 @@ void printPineTree(int n, char symbol);
 // Prints a sequence of n triangles of increasing sizes, filled with the symbol character.
 
 int main() {
-    //printShiftedTriangle(5, 4, '+');
-    printPineTree(4, '#');
+    int num_triangles;
+    char tree_char;
+    cout << "How many triangles do you want in your pine tree?: ";
+    cin >> num_triangles;
+    cout << "Please enter a single character to fill the tree: ";
+    cin >> tree_char;
+    printPineTree(num_triangles, tree_char);
     return 0;
 }
 
