@@ -46,17 +46,15 @@ void printYearCalender(int year, int starting_day);
 // Prints a year calender specified by the year and the starting day of the week.
 
 int main() {
-    // int end_day = printMonthCalender(31, 4);
-    // cout << "end_day: " << end_day << endl;
+    int year, day;
 
-    // cout << "isLeapYear: \n";
-    // cout << "1896: " << isLeapYear(1896) << endl;
-    // cout << "1904: " << isLeapYear(1904) << endl;
-    // cout << "2000: " << isLeapYear(2000) << endl;
-    // cout << "1900: " << isLeapYear(1900) << endl;
-    // cout << "4: " << isLeapYear(4) << endl;
+    cout << "Please enter a year: ";
+    cin >> year;
 
-    printYearCalender(2016, 5);
+    cout << "Please enter the starting day of the year as a number (1-7, Mon - Sun): ";
+    cin >> day;
+
+    printYearCalender(year, day);
 
     return 0;
 }
