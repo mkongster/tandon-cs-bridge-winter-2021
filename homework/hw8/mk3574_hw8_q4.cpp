@@ -8,10 +8,12 @@ Question 4
 #include <iostream>
 #include <random>
 #include <ctime>
+#include <string>
 
 using namespace std;
 
-const string PIN = "12345";
+const string PIN = "54321";
+const int ASCII_ZERO = 48;
 
 string convertPin();
 // Prints out a new mapping of the PIN digits to randomized to either 1, 2 or 3
@@ -43,12 +45,12 @@ string convertPin() {
         cout << converted[i] << " ";
     } 
 
-    for (int i = 1; i <= 5; i++) {
-        new_pin.append(to_string(converted[i]));
+    for (int i = 0; i < 5; i++) {
+        int num = PIN[i] - ASCII_ZERO;
+        new_pin.append(to_string(converted[num]));
     }
 
     cout << endl;
 
     return new_pin;
-
 }
