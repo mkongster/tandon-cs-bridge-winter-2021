@@ -7,12 +7,13 @@ Homework 13
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
 
 using namespace std;
 
-const int INITIAL_DOODLEBUGS = 5;
-const int INITIAL_ANTS = 100;
-const int GRID_SIZE = 20;
+const int INITIAL_DOODLEBUGS = 1;
+const int INITIAL_ANTS = 24;
+const int GRID_SIZE = 5;
 const char EMPTY = '-';
 const char ANT = 'o';
 const char DOODLEBUG = 'X';
@@ -20,10 +21,10 @@ const char DOODLEBUG = 'X';
 class Organism {
     public:
         Organism(int x_loc, int y_loc);
-        virtual void move(char grid[GRID_SIZE][GRID_SIZE])=0;
+        ~Organism();
+        virtual void move(char (&grid)[GRID_SIZE][GRID_SIZE])=0;
         virtual char getSpecies()=0;
-        virtual Organism* breed(char grid[GRID_SIZE][GRID_SIZE])=0;
-        // Breed
+        virtual Organism* breed(char (&grid)[GRID_SIZE][GRID_SIZE])=0;
         int getX();
         int getY();
         void setX(int new_x);
@@ -40,31 +41,34 @@ class Organism {
 class Ant : public Organism {
     public:
         Ant(int x_loc, int y_loc);
-        void move(char grid[GRID_SIZE][GRID_SIZE]);
-        Organism* breed(char grid[GRID_SIZE][GRID_SIZE]);
+        void move(char (&grid)[GRID_SIZE][GRID_SIZE]);
+        Organism* breed(char (&grid)[GRID_SIZE][GRID_SIZE]);
         char getSpecies();
-
-    private:
 };
 
 class Doodlebug : public Organism {
     public:
         Doodlebug();
         Doodlebug(int x_loc, int y_loc);
-        void move(char grid[GRID_SIZE][GRID_SIZE]);
-        Organism* breed(char grid[GRID_SIZE][GRID_SIZE]);
+        void move(char (&grid)[GRID_SIZE][GRID_SIZE]);
+        Organism* breed(char (&grid)[GRID_SIZE][GRID_SIZE]);
         char getSpecies();
+    
+    private:
+        int starve = 0;
 };
 
-void displayGrid(char grid[GRID_SIZE][GRID_SIZE]);
+void displayGrid(char (&grid)[GRID_SIZE][GRID_SIZE]);
 
-void initializeGrid(char grid[GRID_SIZE][GRID_SIZE]);
+void initializeGrid(char (&grid)[GRID_SIZE][GRID_SIZE]);
 
-void initializeGrid(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
+void initializeGrid(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
 
-void moveCritters(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
+void moveCritters(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
 
-void breedCritters(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
+void breedCritters(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters);
+
+bool toDelete(Organism* critter);
 
 int main() {
     string s;
@@ -76,8 +80,8 @@ int main() {
     int doodle_count = 0;
     int x, y;
     while(ant_count < INITIAL_ANTS) {
-        x = rand() % 20;
-        y = rand() % 20;
+        x = rand() % GRID_SIZE;
+        y = rand() % GRID_SIZE;
         if (grid[y][x] == EMPTY) {
             Ant* ant = new Ant(x, y); 
             critters.push_back(ant);
@@ -85,13 +89,24 @@ int main() {
             ant_count++;
         }
     }
-    initializeGrid(grid, critters);
+    while(doodle_count < INITIAL_DOODLEBUGS) {
+        x = rand() % GRID_SIZE;
+        y = rand() % GRID_SIZE;
+        if (grid[y][x] == EMPTY) {
+            Doodlebug* doodle = new Doodlebug(x, y); 
+            critters.push_back(doodle);
+            grid[y][x] == DOODLEBUG;
+            doodle_count++;
+        }
+    }
 
+    initializeGrid(grid, critters);
+    
     while (true) {
-        displayGrid(grid);
         moveCritters(grid, critters);
-        breedCritters(grid, critters);
         initializeGrid(grid, critters);
+        displayGrid(grid);
+        //breedCritters(grid, critters);
         getline(cin, s);
     }
 
@@ -100,6 +115,10 @@ int main() {
 
 Organism::Organism(int x_loc, int y_loc) : x(x_loc), y(y_loc) {
     timestep = 0;
+}
+
+Organism::~Organism() {
+
 }
 
 int Organism::getX() {
@@ -134,7 +153,7 @@ Doodlebug::Doodlebug(int x_loc, int y_loc) : Organism(x_loc, y_loc) {
 
 }
 
-void Ant::move(char grid[GRID_SIZE][GRID_SIZE]) {
+void Ant::move(char (&grid)[GRID_SIZE][GRID_SIZE]) {
     int move = rand() % 4;
 
     switch(move) {
@@ -146,7 +165,7 @@ void Ant::move(char grid[GRID_SIZE][GRID_SIZE]) {
             break;
         // move down
         case 1:
-            if ((this->y < GRID_SIZE - 1) && (grid[this->y - 1][this->x] == EMPTY)) {
+            if ((this->y < GRID_SIZE - 1) && (grid[this->y + 1][this->x] == EMPTY)) {
                 this->setY(this->y + 1);
             }
             break;
@@ -168,18 +187,61 @@ void Ant::move(char grid[GRID_SIZE][GRID_SIZE]) {
     this->timestep++;
 }
 
-void Doodlebug::move(char grid[GRID_SIZE][GRID_SIZE]) {
-    
+void Doodlebug::move(char (&grid)[GRID_SIZE][GRID_SIZE]) {
+    int x_loc, y_loc;
+    if ((this->y > 0) && (grid[this->y - 1][this->x] == ANT)) {
+        this->setY(this->y - 1);
+        this->starve = 0;
+    } else if ((this->y < GRID_SIZE - 1) && (grid[this->y + 1][this->x] == ANT)) {
+        this->setY(this->y + 1);
+        this->starve = 0;
+    } else if ((this->x > 0) && (grid[this->y][this->x - 1] == ANT)) {
+        this->setX(this->x - 1);
+        this->starve = 0;
+    } else if ((this->x < GRID_SIZE - 1) && (grid[this->y][this->x + 1] == ANT)) {
+        this->setX(this->x + 1);
+        this->starve = 0;
+    } else {
+        int move = rand() % 4;
+        this->starve++;
+        switch(move) {
+            // move up
+            case 0:
+                if ((this->y > 0) && (grid[this->y - 1][this->x] == EMPTY)) {
+                    this->setY(this->y - 1);
+                }
+                break;
+            // move down
+            case 1:
+                if ((this->y < GRID_SIZE - 1) && (grid[this->y + 1][this->x] == EMPTY)) {
+                    this->setY(this->y + 1);
+                }
+                break;
+            // move left
+            case 2:
+                if ((this->x > 0) && (grid[this->y][this->x - 1] == EMPTY)) {
+                    this->setX(this->x - 1);
+                }
+                break;
+            case 3:
+                if ((this->x < GRID_SIZE - 1) && (grid[this->y][this->x + 1] == EMPTY)) {
+                    this->setX(this->x + 1);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    this->timestep++;
 }
 
-Organism* Ant::breed(char grid[GRID_SIZE][GRID_SIZE]) {
+Organism* Ant::breed(char (&grid)[GRID_SIZE][GRID_SIZE]) {
     if (this->timestep % 3 == 0 && this->timestep != 0) {
-        int place = rand() % 4;
         int x_loc, y_loc;
         if ((this->y > 0) && (grid[this->y - 1][this->x] == EMPTY)) {
             x_loc = this->x;
             y_loc = this->y - 1;
-        } else if ((this->y < GRID_SIZE - 1) && (grid[this->y - 1][this->x] == EMPTY)) {
+        } else if ((this->y < GRID_SIZE - 1) && (grid[this->y + 1][this->x] == EMPTY)) {
             x_loc = this->x;
             y_loc = this->y + 1;
         } else if ((this->x > 0) && (grid[this->y][this->x - 1] == EMPTY)) {
@@ -201,25 +263,45 @@ Organism* Ant::breed(char grid[GRID_SIZE][GRID_SIZE]) {
     return nullptr;
 }
 
-Organism* Doodlebug::breed(char grid[GRID_SIZE][GRID_SIZE]) {
-    if (this->timestep % 3 == 0 && this->timestep != 0) {
-        Organism* doodle = new Doodlebug(0, 0);
-        return doodle;
-    } else {
-        return nullptr;
+Organism* Doodlebug::breed(char (&grid)[GRID_SIZE][GRID_SIZE]) {
+    if (this->timestep % 8 == 0 && this->timestep != 0) {
+        int x_loc, y_loc;
+        if ((this->y > 0) && (grid[this->y - 1][this->x] == EMPTY)) {
+            x_loc = this->x;
+            y_loc = this->y - 1;
+        } else if ((this->y < GRID_SIZE - 1) && (grid[this->y + 1][this->x] == EMPTY)) {
+            x_loc = this->x;
+            y_loc = this->y + 1;
+        } else if ((this->x > 0) && (grid[this->y][this->x - 1] == EMPTY)) {
+            x_loc = this->x - 1;
+            y_loc = this->y;
+        } else if ((this->x < GRID_SIZE - 1) && (grid[this->y][this->x + 1] == EMPTY)) {
+            x_loc = this->x + 1;
+            y_loc = this->y;
+        } else {
+            x_loc = -1;
+            y_loc = -1;
+        }
+    
+        if (x_loc != -1 && y_loc != -1) {
+            Organism* doodle = new Doodlebug(x_loc, y_loc);
+            return doodle;
+        }
     }
+    return nullptr;
 }
 
-void displayGrid(char grid[GRID_SIZE][GRID_SIZE]) {
+void displayGrid(char (&grid)[GRID_SIZE][GRID_SIZE]) {
     for (int y = 0; y < GRID_SIZE; y++) {
         for (int x = 0; x < GRID_SIZE; x++) {
             cout << grid[y][x] << " ";
         }
         cout << endl;
     }
+    cout << endl;
 }
 
-void initializeGrid(char grid[GRID_SIZE][GRID_SIZE]) {
+void initializeGrid(char (&grid)[GRID_SIZE][GRID_SIZE]) {
     for (int y = 0; y < GRID_SIZE; y++) {
         for (int x = 0; x < GRID_SIZE; x++) {
             grid[y][x] = EMPTY;
@@ -227,7 +309,7 @@ void initializeGrid(char grid[GRID_SIZE][GRID_SIZE]) {
     }
 }
 
-void initializeGrid(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
+void initializeGrid(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
     initializeGrid(grid);
 
     int x, y;
@@ -239,25 +321,31 @@ void initializeGrid(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters
     }
 }
 
-void moveCritters(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
+void moveCritters(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
     for (int i = 0; i < critters.size(); i++) {
         if (critters[i]->getSpecies() == DOODLEBUG) {
             critters[i]->move(grid);
         }
     }
     for (int i = 0; i < critters.size(); i++) {
-        if (critters[i]->getSpecies() == ANT) {
+        if (grid[critters[i]->getY()][critters[i]->getX()] == DOODLEBUG && critters[i]->getSpecies() == ANT) {
+            delete critters[i];
+            critters[i] = nullptr;
+        } else if (critters[i]->getSpecies() == ANT) {
             critters[i]->move(grid);
         }
     }
+
+    critters.erase(remove_if(critters.begin(), critters.end(), toDelete), critters.end());
 }
 
-void breedCritters(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
+void breedCritters(char (&grid)[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters) {
     vector<Organism*> new_critters;
 
     for (int i = 0; i < critters.size(); i++) {
         Organism* critter = critters[i]->breed(grid);
         if (critter != nullptr) {
+            grid[critter->getY()][critter->getX()] = critter->getSpecies();
             new_critters.push_back(critter);
         }
     }
@@ -265,4 +353,11 @@ void breedCritters(char grid[GRID_SIZE][GRID_SIZE], vector<Organism*>& critters)
     for (int i = 0; i < new_critters.size(); i++) {
         critters.push_back(new_critters[i]);
     }
+}
+
+bool toDelete(Organism* critter) {
+    if (critter == nullptr) {
+        return true;
+    }
+    return false;
 }
